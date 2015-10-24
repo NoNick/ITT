@@ -265,9 +265,12 @@ Definition snd' (A : Set) (B : A -> Set) (p : Sigma A B) : B (fst' A B p) :=
   split' A B (fun x => B(fst' A B x)) p (fun _ b => b).
 
 Theorem forall_is_exists : forall (A : Set) (B : A -> Set),
-    (Pi A (fun x => ~' (B x)) ~> ~' (Sigma A B)).
+    (Pi A (fun x => ((B x) -> Empty)) ~> ~' (Sigma A B)).
 Proof.
-  admit.
+  intros A B.
+  intuition.
+  case x.
+  exact b.
 Qed.
 
 Inductive List (A : Set) : Set :=
@@ -336,6 +339,81 @@ Section Theorem_about_min_refl_relation.
   Theorem min_reflex_rel_is_equiv_and_ext  :
     (equiv A R) /.\ forall (B : Type) (R2 : Relation B), equiv B R2 -> forall f: A -> B, extensional A B R R2 f.
   Proof.
-    admit.
+    unfold equiv.
   Qed.
 End Theorem_about_min_refl_relation.
+
+
+eq_nat : Nat -> Nat -> Bool.
+Theorem th2 : Id (Nat, x, y) <-> Is_true (eq_nat(x, y)).
+Proof.
+  (* => *)
+  intros x_y.
+  rewrite x_y.
+  elim x.
+    simpl.
+    simpl.
+
+  (* <= *)
+  intros eq_true.
+  elim x.
+    elim y.
+      simpl. (* y = 0, eq_nat (0, 0) *)
+      case False. (* y !=0 => Id (Nat, x, y) *)
+    (* forall y, Is_true(eq_nat(x, y)) -> Id(N, x, y) *)
+      (* forall y, Is_true(eq_nat((succ x), y)) -> Id(N, (succ x), y) *)
+      elim y.
+        (* y = 0 *)
+        simpl.
+        case False.
+        (* y = succ u *)
+        intros smth. (* *)
+        simpl. (* forall y, Is_true(eq_nat(x, u)) -> Id(N, x, u) *)
+        (* succ is extensional => Id(Nat, x, y) -> Id(Nat, succ x, succ y) *)
+Qed.
+
+(* Аксиомы выбора *)
+(* (forall X: X != Empty) & (forall y in X: y != Empty) => Декартово произведение семейства x != Empty *)
+(* S_w, (w in W) - семейство => exists f: w -> Union[S, w in W] forall w in W: f(w) in S_w *)
+
+Variable R := Relation S T. (* S T : Set *)
+(* аксиома выбора *)
+Theorem TT : (forall x in S) (exists y in T): R(x, y) -> (exists f: S -> T) (forall x in S) R(x, f(x)).
+Proof.
+  (* Построим ans: Pi(S, [x] Sigma (T, R(x))) -> Sigma(S -> T, [f] Pi(S, [x]R(x, f(x))))
+     Рассмотрим z in Pi(S, [x] Sigma(T, R(x)))
+     x in S => z(x) in Sigma(T, R(x))
+     fst(z(x)) in T
+     snd(z(x)) in R(x, fst(z(x)))
+     Заметим, что fst(z(x)) = (\x. fst(z(x))) (x)
+     \y. snd(z(y)) in Pi(S, [z]R(z, (\x. fst(z(x))) (z)))
+     \x. fst(z(x)) in S -> T
+     pair (\x. fst(z(x)), \f. \y. snd(z(y))) in Sigma (f in (Pi x in A) T(x)) (Pi x in S) R(x, f(x)) *)
+Qed.
+
+(* Сетоид - пара из сета и отношения экв. на нем: (S, =_s) *)
+(* R(x, y) [x in A : Setoid, y in B : Setoid], если forall x, y in A, u, v, in B: (R(x, u) /\ x =_A y /\ u =_B v) -> R(y, v) *)
+(* ZF - аксиома выбора
+   A, B - сетоиды, R - экст. отн.
+   (forall x in A) (exists y in B) : R(x, y) -> (exists экстенц. f in A -> B) f (forall x) R(x, f(x)) *)
+(* Аксиома уникального выбора
+   A, B - сетоиды, R - экст. отн.
+   (forall x in A) (exists единственный y in B) : R(x, y) -> (exists экстенц. f in A -> B) f (forall x) R(x, f(x))
+   Proof.
+     Возьмем f in TT.
+     Рассмотрим x in A: R(x, f(x)).
+     Рассмотрим u in A: R(u, f(u)).
+     x =_A u => R(x, f(u)) => f(x) =_B f(u). *)
+
+(* f, g: A -> B - экст. функции на сетоидах
+   f и g экстенционально эквивалентны (f =_ext g), если (forall x in A) f(x) =_A = g(x) *)
+(* |f| - сетоид без экв. (т.е. Set)
+   f - (|f| : |A| -> |B|, ex_proof: extensional A B f) *)
+(* f: B -> C, g: A -> B => f . g : A -> C = (h, ext_n),
+   h = |f| . |g|, ext_n  = {x =_A y -> g(x) =_B g(y) -> f(g(x)) =_C f(g(y))}}; *)
+(* Св-ва: f =_ext h => g =_ext k => f . g =_ext h . k
+          h . (g  . f) =_ext (h . g) . f
+          forall X, Y, f: X -> Y: f . id_X =_ext f & id_Y =_ext f *)
+(* f: X -> Y инъективно, если forall x, y in X: f(x) =_Y f(y) => x = y *)
+(* f: X -> Y сюръективно, если foral y in Y exists x in X f(x) =_Y y*)
+(* биективно = инъективно /\ сюръективно *)
